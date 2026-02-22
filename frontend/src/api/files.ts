@@ -194,6 +194,13 @@ export function copy(items: any[], overwrite = false, rename = false) {
   return moveCopy(items, true, overwrite, rename);
 }
 
+export async function extractAudio(from: string, to: string) {
+  const fromEncoded = removePrefix(from);
+  const toEncoded = encodeURIComponent(removePrefix(to));
+  const url = `${fromEncoded}?action=extract_audio&destination=${toEncoded}`;
+  return resourceAction(url, "PATCH");
+}
+
 export async function checksum(url: string, algo: ChecksumAlg) {
   const data = await resourceAction(`${url}?checksum=${algo}`, "GET");
   return (await data.json()).checksums[algo];

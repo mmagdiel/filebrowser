@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
@@ -366,6 +367,12 @@ func patchAction(ctx context.Context, action, src, dst string, d *data, fileCach
 		}
 
 		return fileutils.MoveFile(d.user.Fs, src, dst, d.settings.FileMode, d.settings.DirMode)
+	case "extract_audio":
+		if !d.user.Perm.Create {
+			return fberrors.ErrPermissionDenied
+		}
+
+		return extractAudio(d.user.Fs, src, dst)
 	default:
 		return fmt.Errorf("unsupported action %s: %w", action, fberrors.ErrInvalidRequestParams)
 	}
@@ -406,3 +413,45 @@ var diskUsage = withUser(func(w http.ResponseWriter, r *http.Request, d *data) (
 		Used:  usage.Used,
 	})
 })
+
+func extractAudio(afs afero.Fs, src, dst string) error {
+	// Get the real path for the source file
+	srcFile, err := afs.Open(src)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	// Get real path if using BasePathFs
+	var srcRealPath string
+	if basePathFs, ok := afs.(*afero.BasePathFs); ok {
+		srcRealPath, err = basePathFs.RealPath(src)
+		if err != nil {
+			return err
+		}
+	} else {
+		srcRealPath = src
+	}
+
+	// Get real path for destination
+	var dstRealPath string
+	if basePathFs, ok := afs.(*afero.BasePathFs); ok {
+		dstRealPath, err = basePathFs.RealPath(dst)
+		if err != nil {
+			return err
+		}
+	} else {
+		dstRealPath = dst
+	}
+
+	// Execute ffmpeg to extract audio
+	cmd := exec.Command("ffmpeg",
+		"-i", srcRealPath,
+		"-vn",
+		"-acodec", "libmp3lame",
+		"-q:a", "2",
+		dstRealPath,
+	)
+
+	return cmd.Run()
+}
