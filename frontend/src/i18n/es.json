@@ -11,6 +11,7 @@
     "create": "Crear",
     "delete": "Borrar",
     "download": "Descargar",
+    "extractAudio": "Extraer audio",
     "file": "Archivo",
     "folder": "Carpeta",
     "fullScreen": "Toggle full screen",
@@ -278,7 +279,8 @@
     "siteSettings": "Ajustes del sitio"
   },
   "success": {
-    "linkCopied": "¡Link copiado!"
+    "linkCopied": "¡Link copiado!",
+    "audioExtracted": "¡Audio extraído exitosamente!"
   },
   "time": {
     "days": "Días",

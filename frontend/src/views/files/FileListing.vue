@@ -45,6 +45,12 @@
             :label="t('buttons.delete')"
             show="delete"
           />
+          <action
+            v-if="headerButtons.extractAudio"
+            icon="music_note"
+            :label="t('buttons.extractAudio')"
+            @action="extractAudioFromVideo"
+          />
         </template>
 
         <action
@@ -120,6 +126,12 @@
         icon="delete"
         :label="t('buttons.delete')"
         show="delete"
+      />
+      <action
+        v-if="headerButtons.extractAudio"
+        icon="music_note"
+        :label="t('buttons.extractAudio')"
+        @action="extractAudioFromVideo"
       />
     </div>
 
@@ -296,6 +308,12 @@
             show="delete"
           />
           <action
+            v-if="headerButtons.extractAudio"
+            icon="music_note"
+            :label="t('buttons.extractAudio')"
+            @action="extractAudioFromVideo"
+          />
+          <action
             v-if="headerButtons.download"
             icon="file_download"
             :label="t('buttons.download')"
@@ -380,6 +398,7 @@ const isContextMenuVisible = ref<boolean>(false);
 const contextMenuPos = ref<{ x: number; y: number }>({ x: 0, y: 0 });
 
 const $showError = inject<IToastError>("$showError")!;
+const $showSuccess = inject<IToastSuccess>("$showSuccess")!;
 
 const clipboardStore = useClipboardStore();
 const authStore = useAuthStore();
@@ -474,6 +493,11 @@ const viewIcon = computed(() => {
 });
 
 const headerButtons = computed(() => {
+  const selectedItem =
+    fileStore.selectedCount === 1 && fileStore.req
+      ? fileStore.req.items[fileStore.selected[0]]
+      : null;
+
   return {
     upload: authStore.user?.perm.create,
     download: authStore.user?.perm.download,
@@ -483,6 +507,10 @@ const headerButtons = computed(() => {
     share: fileStore.selectedCount === 1 && authStore.user?.perm.share,
     move: fileStore.selectedCount > 0 && authStore.user?.perm.rename,
     copy: fileStore.selectedCount > 0 && authStore.user?.perm.create,
+    extractAudio:
+      fileStore.selectedCount === 1 &&
+      authStore.user?.perm.create &&
+      selectedItem?.type === "video",
   };
 });
 
@@ -963,6 +991,30 @@ const download = () => {
       api.download(format, ...files);
     },
   });
+};
+
+const extractAudioFromVideo = async () => {
+  if (fileStore.req === null || fileStore.selectedCount !== 1) return;
+
+  const videoFile = fileStore.req.items[fileStore.selected[0]];
+  
+  // Generate output path: replace video extension with .mp3
+  // Use the same directory as the video file
+  const dir = videoFile.url.substring(0, videoFile.url.lastIndexOf('/') + 1);
+  const nameWithoutExt = videoFile.name.replace(/\.[^.]+$/, '');
+  const outputPath = dir + encodeURIComponent(nameWithoutExt + '.mp3');
+
+  try {
+    await api.extractAudio(videoFile.url, outputPath);
+    
+    // Show success message
+    $showSuccess(t("success.audioExtracted"));
+    
+    // Reload the file list to show the new audio file
+    fileStore.reload = true;
+  } catch (error) {
+    $showError(error as Error);
+  }
 };
 
 const switchView = async () => {

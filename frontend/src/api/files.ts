@@ -195,9 +195,8 @@ export function copy(items: any[], overwrite = false, rename = false) {
 }
 
 export async function extractAudio(from: string, to: string) {
-  const fromEncoded = removePrefix(from);
   const toEncoded = encodeURIComponent(removePrefix(to));
-  const url = `${fromEncoded}?action=extract_audio&destination=${toEncoded}`;
+  const url = `${from}?action=extract_audio&destination=${toEncoded}`;
   return resourceAction(url, "PATCH");
 }
 
