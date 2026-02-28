@@ -373,6 +373,12 @@ func patchAction(ctx context.Context, action, src, dst string, d *data, fileCach
 		}
 
 		return extractAudio(d.user.Fs, src, dst)
+	case "transcribe_audio":
+		if !d.user.Perm.Create {
+			return fberrors.ErrPermissionDenied
+		}
+
+		return transcribeAudio(d.user.Fs, src, dst)
 	default:
 		return fmt.Errorf("unsupported action %s: %w", action, fberrors.ErrInvalidRequestParams)
 	}
@@ -454,4 +460,53 @@ func extractAudio(afs afero.Fs, src, dst string) error {
 	)
 
 	return cmd.Run()
+}
+
+func transcribeAudio(afs afero.Fs, src, dst string) error {
+	// Check if venv is initialized
+	venvManager := GetVenvManager()
+	if venvManager == nil || !venvManager.IsInitialized() {
+		return fmt.Errorf("Python virtual environment not initialized. Audio transcription is not available")
+	}
+
+	// Get the real path for the source file
+	srcFile, err := afs.Open(src)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	// Get real path if using BasePathFs
+	var srcRealPath string
+	if basePathFs, ok := afs.(*afero.BasePathFs); ok {
+		srcRealPath, err = basePathFs.RealPath(src)
+		if err != nil {
+			return err
+		}
+	} else {
+		srcRealPath = src
+	}
+
+	// Get real path for destination
+	var dstRealPath string
+	if basePathFs, ok := afs.(*afero.BasePathFs); ok {
+		dstRealPath, err = basePathFs.RealPath(dst)
+		if err != nil {
+			return err
+		}
+	} else {
+		dstRealPath = dst
+	}
+
+	// Execute Python script using venv Python interpreter
+	pythonPath := venvManager.GetPythonPath()
+	cmd := exec.Command(pythonPath, "transcribe.py", srcRealPath, dstRealPath)
+
+	// Capture output for debugging
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("transcription failed: %v, output: %s", err, string(output))
+	}
+
+	return nil
 }

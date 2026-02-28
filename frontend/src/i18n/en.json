@@ -12,6 +12,7 @@
     "delete": "Delete",
     "download": "Download",
     "extractAudio": "Extract audio",
+    "transcribeAudio": "Transcribe audio",
     "file": "File",
     "folder": "Folder",
     "fullScreen": "Toggle full screen",
@@ -73,6 +74,8 @@
     "home": "Home",
     "lastModified": "Last modified",
     "loading": "Loading...",
+    "processingAudio": "Extracting audio...",
+    "processingTranscription": "Transcribing audio... This may take several minutes.",
     "lonely": "It feels lonely here...",
     "metadata": "Metadata",
     "multipleSelectionEnabled": "Multiple selection enabled",
@@ -280,7 +283,8 @@
   },
   "success": {
     "linkCopied": "Link copied!",
-    "audioExtracted": "Audio extracted successfully!"
+    "audioExtracted": "Audio extracted successfully!",
+    "audioTranscribed": "Audio transcribed successfully!"
   },
   "time": {
     "days": "Days",

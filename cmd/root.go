@@ -27,6 +27,7 @@ import (
 	"github.com/filebrowser/filebrowser/v2/frontend"
 	fbhttp "github.com/filebrowser/filebrowser/v2/http"
 	"github.com/filebrowser/filebrowser/v2/img"
+	"github.com/filebrowser/filebrowser/v2/python"
 	"github.com/filebrowser/filebrowser/v2/settings"
 	"github.com/filebrowser/filebrowser/v2/storage"
 	"github.com/filebrowser/filebrowser/v2/users"
@@ -168,6 +169,16 @@ user created with the credentials from options "username" and "password".`,
 			return errors.New("image resize workers count could not be < 1")
 		}
 		imageService := img.New(imgWorkersCount)
+
+		// Initialize Python virtual environment for transcription
+		venvManager := python.NewVenvManager()
+		if err := venvManager.Initialize(); err != nil {
+			log.Printf("Warning: Failed to initialize Python virtual environment: %v", err)
+			log.Println("Audio transcription feature will not be available")
+		} else {
+			// Store venv manager for use by HTTP handlers
+			fbhttp.SetVenvManager(venvManager)
+		}
 
 		var fileCache diskcache.Interface = diskcache.NewNoOp()
 		cacheDir := v.GetString("cacheDir")

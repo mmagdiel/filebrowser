@@ -16,6 +16,24 @@ type modifyRequest struct {
 	CurrentPassword string   `json:"current_password"` // Answer to: user logged password
 }
 
+// VenvManager interface for Python virtual environment management
+type VenvManager interface {
+	GetPythonPath() string
+	IsInitialized() bool
+}
+
+var globalVenvManager VenvManager
+
+// SetVenvManager sets the global venv manager
+func SetVenvManager(vm VenvManager) {
+	globalVenvManager = vm
+}
+
+// GetVenvManager returns the global venv manager
+func GetVenvManager() VenvManager {
+	return globalVenvManager
+}
+
 func NewHandler(
 	imgSvc ImgService,
 	fileCache FileCache,

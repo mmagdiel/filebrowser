@@ -51,6 +51,12 @@
             :label="t('buttons.extractAudio')"
             @action="extractAudioFromVideo"
           />
+          <action
+            v-if="headerButtons.transcribeAudio"
+            icon="subtitles"
+            :label="t('buttons.transcribeAudio')"
+            @action="transcribeAudioToText"
+          />
         </template>
 
         <action
@@ -133,6 +139,12 @@
         :label="t('buttons.extractAudio')"
         @action="extractAudioFromVideo"
       />
+      <action
+        v-if="headerButtons.transcribeAudio"
+        icon="subtitles"
+        :label="t('buttons.transcribeAudio')"
+        @action="transcribeAudioToText"
+      />
     </div>
 
     <div v-if="layoutStore.loading">
@@ -142,7 +154,9 @@
           <div class="bounce2"></div>
           <div class="bounce3"></div>
         </div>
-        <span>{{ t("files.loading") }}</span>
+        <span v-if="processingOperation === 'audio'">{{ t("files.processingAudio") }}</span>
+        <span v-else-if="processingOperation === 'transcription'">{{ t("files.processingTranscription") }}</span>
+        <span v-else>{{ t("files.loading") }}</span>
       </h2>
     </div>
     <template v-else>
@@ -314,6 +328,12 @@
             @action="extractAudioFromVideo"
           />
           <action
+            v-if="headerButtons.transcribeAudio"
+            icon="subtitles"
+            :label="t('buttons.transcribeAudio')"
+            @action="transcribeAudioToText"
+          />
+          <action
             v-if="headerButtons.download"
             icon="file_download"
             :label="t('buttons.download')"
@@ -396,6 +416,7 @@ const width = ref<number>(window.innerWidth);
 const itemWeight = ref<number>(0);
 const isContextMenuVisible = ref<boolean>(false);
 const contextMenuPos = ref<{ x: number; y: number }>({ x: 0, y: 0 });
+const processingOperation = ref<string>("");
 
 const $showError = inject<IToastError>("$showError")!;
 const $showSuccess = inject<IToastSuccess>("$showSuccess")!;
@@ -511,6 +532,10 @@ const headerButtons = computed(() => {
       fileStore.selectedCount === 1 &&
       authStore.user?.perm.create &&
       selectedItem?.type === "video",
+    transcribeAudio:
+      fileStore.selectedCount === 1 &&
+      authStore.user?.perm.create &&
+      selectedItem?.type === "audio",
   };
 });
 
@@ -1005,6 +1030,10 @@ const extractAudioFromVideo = async () => {
   const outputPath = dir + encodeURIComponent(nameWithoutExt + '.mp3');
 
   try {
+    // Show loading overlay with custom message
+    processingOperation.value = "audio";
+    layoutStore.loading = true;
+    
     await api.extractAudio(videoFile.url, outputPath);
     
     // Show success message
@@ -1014,6 +1043,42 @@ const extractAudioFromVideo = async () => {
     fileStore.reload = true;
   } catch (error) {
     $showError(error as Error);
+  } finally {
+    // Hide loading overlay
+    layoutStore.loading = false;
+    processingOperation.value = "";
+  }
+};
+
+const transcribeAudioToText = async () => {
+  if (fileStore.req === null || fileStore.selectedCount !== 1) return;
+
+  const audioFile = fileStore.req.items[fileStore.selected[0]];
+  
+  // Generate output path: replace audio extension with .srt
+  // Use the same directory as the audio file
+  const dir = audioFile.url.substring(0, audioFile.url.lastIndexOf('/') + 1);
+  const nameWithoutExt = audioFile.name.replace(/\.[^.]+$/, '');
+  const outputPath = dir + encodeURIComponent(nameWithoutExt + '.srt');
+
+  try {
+    // Show loading overlay with custom message
+    processingOperation.value = "transcription";
+    layoutStore.loading = true;
+    
+    await api.transcribeAudio(audioFile.url, outputPath);
+    
+    // Show success message
+    $showSuccess(t("success.audioTranscribed"));
+    
+    // Reload the file list to show the new subtitle file
+    fileStore.reload = true;
+  } catch (error) {
+    $showError(error as Error);
+  } finally {
+    // Hide loading overlay
+    layoutStore.loading = false;
+    processingOperation.value = "";
   }
 };
 

@@ -200,6 +200,12 @@ export async function extractAudio(from: string, to: string) {
   return resourceAction(url, "PATCH");
 }
 
+export async function transcribeAudio(from: string, to: string) {
+  const toEncoded = encodeURIComponent(removePrefix(to));
+  const url = `${from}?action=transcribe_audio&destination=${toEncoded}`;
+  return resourceAction(url, "PATCH");
+}
+
 export async function checksum(url: string, algo: ChecksumAlg) {
   const data = await resourceAction(`${url}?checksum=${algo}`, "GET");
   return (await data.json()).checksums[algo];
