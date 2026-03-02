@@ -28,3 +28,8 @@ Contributions are always welcome. To start contributing to this project, read ou
 ## License
 
 [Apache License 2.0](LICENSE) © File Browser Contributors
+
+## Commands frontend
+
+pnpm run build:with-audio-actions
+pnpm run build:no-audio-actions

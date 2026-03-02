@@ -10,6 +10,8 @@
   "scripts": {
     "dev": "vite dev",
     "build": "pnpm run typecheck && vite build",
+    "build:with-audio-actions": "pnpm run build",
+    "build:no-audio-actions": "VITE_ENABLE_AUDIO_ACTIONS=false pnpm run build",
     "clean": "find ./dist -maxdepth 1 -mindepth 1 ! -name '.gitkeep' -exec rm -r {} +",
     "typecheck": "vue-tsc -p ./tsconfig.app.json --noEmit",
     "lint": "eslint src/",

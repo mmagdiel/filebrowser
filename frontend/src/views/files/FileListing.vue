@@ -390,6 +390,8 @@ import css from "@/utils/css";
 import { throttle } from "lodash-es";
 import { Base64 } from "js-base64";
 
+const enableAudioActions = import.meta.env.VITE_ENABLE_AUDIO_ACTIONS !== "false";
+
 import HeaderBar from "@/components/header/HeaderBar.vue";
 import Action from "@/components/header/Action.vue";
 import Search from "@/components/Search.vue";
@@ -535,6 +537,7 @@ const headerButtons = computed(() => {
     transcribeAudio:
       fileStore.selectedCount === 1 &&
       authStore.user?.perm.create &&
+      enableAudioActions &&
       selectedItem?.type === "audio",
   };
 });

@@ -17,6 +17,20 @@ tasks:
       - pnpm install --frozen-lockfile
       - pnpm run build
 
+  build:frontend:with-audio-actions:
+    desc: Build frontend assets with audio actions enabled
+    dir: frontend
+    cmds:
+      - pnpm install --frozen-lockfile
+      - pnpm run build
+
+  build:frontend:no-audio-actions:
+    desc: Build frontend assets without audio actions
+    dir: frontend
+    cmds:
+      - pnpm install --frozen-lockfile
+      - VITE_ENABLE_AUDIO_ACTIONS=false pnpm run build
+
   build:backend:
     desc: Build backend binary
     cmds:
